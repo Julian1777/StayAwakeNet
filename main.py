@@ -22,6 +22,9 @@ hand_cap = cv.VideoCapture(hand_video_source)
 EYES_CLOSED_FRAMES = 0
 EYES_CLOSED_THRESHOLD = 30
 
+NO_HAND=0
+NO_HAND_THRESHOLD = 20
+
 def compute_ear(eye):
     p1, p2, p3, p4, p5, p6 = eye
 
@@ -86,11 +89,14 @@ while True:
     if ret_hand:
         hand_results = get_hand(hand_frame, hands)
         if hand_results.multi_hand_landmarks:
+            NO_HAND = 0
             for hand_landmarks in hand_results.multi_hand_landmarks:
                 mp.solutions.drawing_utils.draw_landmarks(
                     hand_frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
         else:
-            cv.putText(hand_frame, 'WARNING: Hands not detected!', (30, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+            NO_HAND += 1
+            if NO_HAND >= NO_HAND_THRESHOLD:
+                cv.putText(hand_frame, 'WARNING: Hands not detected!', (30, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
         cv.imshow('Hand Detection', hand_frame)
 
     cv.imshow('EAR Detection & Head Pose', frame)
