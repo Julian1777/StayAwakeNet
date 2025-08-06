@@ -5,13 +5,14 @@ import numpy as np
 from ear import get_eye_landmarks
 from gaze import get_head_pose_angles
 from hand import get_hand
+from eyes import get_eyes
 
 #video_source = './vids/self_eye.mov'
 video_source = './vids/driving1.mp4'
 hand_video_source = './vids/hands1.mp4'
 
 mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1)
+face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refine_landmarks=True)
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)
@@ -85,6 +86,16 @@ while True:
 
         if roll < -15 or roll > 15:
             cv.putText(frame, 'WARNING: Head tilting!', (30, 300), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 0), 2)
+
+    iris_results = get_eyes(frame, face_mesh)
+    if iris_results.multi_face_landmarks:
+        for face_landmarks in iris_results.multi_face_landmarks:
+            left_iris = [face_landmarks.landmark[i] for i in range(474, 478)]
+            right_iris = [face_landmarks.landmark[i] for i in range(469, 473)]
+            for landmark in left_iris + right_iris:
+                x = landmark.x
+                y = landmark.y
+                cv.circle(frame, (int(x * frame.shape[1]), int(y * frame.shape[0])), 2, (255, 0, 255), -1)
 
     if ret_hand:
         hand_results = get_hand(hand_frame, hands)
